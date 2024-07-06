@@ -1,0 +1,26 @@
+{
+  "name": "ignotum",
+  "version": "0.1.0",
+  "description": "The official Ignotum JavaScript Library.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ignotum-tickets/ignotum-js.git"
+  },
+  "author": "Ignotum",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ignotum-tickets/ignotum-js/issues"
+  },
+  "homepage": "https://github.com/ignotum-tickets/ignotum-js#readme",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "express": "^4.19.2",
+    "pdfkit": "^0.15.0",
+    "qrcode": "^1.5.3",
+    "supertest": "^7.0.0"
+  }
+}
