@@ -11,7 +11,7 @@
     "url": "git+https://github.com/ignotum-tickets/ignotum-js.git"
   },
   "author": "Ignotum",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ignotum-tickets/ignotum-js/issues"
   },
@@ -21,6 +21,6 @@
     "express": "^4.19.2",
     "pdfkit": "^0.15.0",
     "qrcode": "^1.5.3",
-    "supertest": "^7.0.0"
+    "sharp": "^0.33.4"
   }
 }

@@ -1,110 +1,130 @@
+/*
+* This software is licensed under the MIT License.
+* See the LICENSE file for more information.
+*/
+
+
 const axios = require('axios');
 const PDFDocument = require('pdfkit');
-const QRCode = require('qrcode');
 const fs = require('fs');
+const QRCode = require('qrcode');
 
 class Ignotum {
-    constructor(apiKey, baseUrl = 'http://ignotum.onrender.com') {
-        this.apiKey = apiKey;
-        this.baseUrl = baseUrl;
+    constructor(baseURL, apiKey) {
+        this.api = axios.create({
+            baseURL: baseURL,
+            headers: { 'x-api-key': apiKey }
+        });
     }
 
     async createTicket(ticket) {
         try {
-            const response = await axios.post(`${this.baseUrl}/ticket`, ticket, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await this.api.post('/ticket', ticket);
             return response.data;
         } catch (error) {
-            throw new Error(`Error creating ticket: ${error.message}`);
+            this.handleError(error);
         }
     }
 
-    async updateTicket(ticket_id, ticket) {
+    async getTicket(ticketId) {
         try {
-            const response = await axios.put(`${this.baseUrl}/ticket/${ticket_id}`, ticket, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await this.api.get(`/ticket/${ticketId}`);
             return response.data;
         } catch (error) {
-            throw new Error(`Error updating ticket: ${error.message}`);
+            this.handleError(error);
         }
     }
 
-    async getTicket(ticket_id) {
+    async updateTicket(ticketId, ticket) {
         try {
-            const response = await axios.get(`${this.baseUrl}/ticket/${ticket_id}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
-                }
-            });
+            const response = await this.api.put(`/ticket/${ticketId}`, ticket);
             return response.data;
         } catch (error) {
-            throw new Error(`Error retrieving ticket: ${error.message}`);
+            this.handleError(error);
         }
     }
 
-    async deleteTicket(ticket_id) {
+    async deleteTicket(ticketId) {
         try {
-            const response = await axios.delete(`${this.baseUrl}/ticket/${ticket_id}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
-                }
-            });
+            const response = await this.api.delete(`/ticket/${ticketId}`);
             return response.data;
         } catch (error) {
-            throw new Error(`Error deleting ticket: ${error.message}`);
+            this.handleError(error);
         }
     }
 
-    async checkTicket(ticket_id) {
+    async createTicketPDF(ticketId, watermark = true) {
         try {
-            const response = await axios.get(`${this.baseUrl}/ticket/check/${ticket_id}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
-                }
-            });
-            return response.data;
-        } catch (error) {
-            throw new Error(`Error checking ticket: ${error.message}`);
-        }
-    }
+            const ticket = await this.getTicket(ticketId);
+            const doc = new PDFDocument({ margin: 50 });
 
-    async createTicketPDF(ticket_id, outputPath) {
-        try {
-            const ticket = await this.getTicket(ticket_id);
-            
-            const doc = new PDFDocument();
+            const filePath = `ticket_${ticket.event_name}_${ticket.holder_name}.pdf`.replace(/\s+/g, '').toLowerCase();
+            const writeStream = fs.createWriteStream(filePath);
+            doc.pipe(writeStream);
 
-            doc.pipe(fs.createWriteStream(outputPath));
+            const qrCodeData = `ticket_${ticketId}`;
+            const qrCodeImage = await QRCode.toDataURL(qrCodeData);
 
-            doc.fontSize(20).text('Ticket Details', { align: 'center' });
-            doc.moveDown();
-            doc.fontSize(12).text(`Owner: ${ticket.customer_first_name} ${ticket.customer_last_name}`);
-            doc.text(`Email: ${ticket.customer_email}`);
-            doc.text(`Title: ${ticket.title}`);
-            doc.text(`Expiration Date: ${ticket.close_date}`);
+            doc.fontSize(20).text(`Ticket for ${ticket.event_name}`);
+
+            doc.image(qrCodeImage, { fit: [150, 150] });
+            doc.moveDown(7);
+
+            doc.fontSize(16).text(`Event Name: ${ticket.event_name}`);
+            doc.moveDown(0.5);
+            doc.text(`Event Location: ${ticket.event_location}`);
+            doc.moveDown(0.5);
             doc.text(`Event Date: ${ticket.event_date}`);
-            doc.moveDown();
+            doc.moveDown(1);
 
-            const qrCodeDataURL = await QRCode.toDataURL(ticket_id);
+            doc.text(`Holder Name: ${ticket.holder_name}`);
+            doc.moveDown(0.5);
+            doc.text(`Holder Email: ${ticket.holder_email}`);
+            doc.moveDown(1);
 
-            doc.image(qrCodeDataURL, {
-                fit: [100, 100],
-                align: 'center',
-                valign: 'center'
-            });
+            doc.text(`Notes: ${ticket.notes}`);
+            doc.moveDown(1);
+
+            doc.text(`Terms and Conditions: ${ticket.terms_and_conditions}`);
+            doc.moveDown(3);
+
+            if (watermark) {
+                doc.fontSize(12).text('Powered by Ignotum TicketAPI', {
+                    baseline: 'bottom',
+                    margin: 20
+                });
+            }
+
+
+
 
             doc.end();
+
+            return new Promise((resolve, reject) => {
+                writeStream.on('finish', () => {
+                    resolve(filePath);
+                });
+
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            });
         } catch (error) {
-            throw new Error(`Error creating PDF: ${error.message}`);
+            this.handleError(error);
         }
+    }
+
+    handleError(error) {
+        if (error.response) {
+            console.error(`Error: ${error.response.status} - ${error.response.data.error}`);
+            console.error(`Message: ${error.response.data.message}`);
+            console.error(`Suggestion: ${error.response.data.suggestion}`);
+        } else if (error.request) {
+            console.error('Error: No response received from the server.');
+        } else {
+            console.error(`Error: ${error.message}`);
+        }
+        throw error;
     }
 }
 

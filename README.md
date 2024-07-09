@@ -1,4 +1,4 @@
-# ignotum-js
+# Ignotum-JS
 The official Ignotum JavaScript Library.
 
 ## Installation
