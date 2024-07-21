@@ -1,6 +1,6 @@
 {
-  "name": "@ignotum-tickets/ignotum",
-  "version": "0.1.3",
+  "name": "ignotum",
+  "version": "0.1.2",
   "description": "The official Ignotum JavaScript Library.",
   "main": "index.js",
   "scripts": {

@@ -6,7 +6,7 @@ This is not a stable version, so breaking changes may be made.
 
 ## Installation
 ```bash
-npm install @ignotum-tickets/ignotum
+npm install ignotum
 ```
 
 ## Overview
@@ -20,16 +20,16 @@ The `Ignotum` class provides an interface for managing event tickets with Ignotu
 Create an instance of the `Ignotum` class with the base URL of the API and your API key:
 
 ```javascript
-const Ignotum = require('@ignotum-tickets/ignotum');
+const Ignotum = require('ignotum');
 
-const baseURL = 'https://ignotum.onrender.com/beta/1/';
+const baseURL = 'https://api.ignotum.dev/beta/1/';
 const apiKey = 'your-api-key';
 
 const ignotum = new Ignotum(baseURL, apiKey);
 
 ```
 
-Note: The base URL must always start with https://ignotum.onrender.com/beta, then you can choose which beta to use.
+Note: The base URL must always start with https://api.ignotum.dev/beta, then you can choose which beta to use.
 
 ### Methods
 
